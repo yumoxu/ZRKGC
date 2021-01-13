@@ -69,12 +69,13 @@ def calc_bleu(data_file):
 def bleu_stats(bleu_list):
 	ratio_10 = [bleu for bleu in bleu_list if bleu>=0.1]
 	ratio_30 = [bleu for bleu in ratio_10 if bleu>=0.3]
-	ratio_50 = [bleu for bleu in ratio_30 if bleu>=0.5]
+	ratio_40 = [bleu for bleu in ratio_30 if bleu>=0.4]
+	ratio_50 = [bleu for bleu in ratio_40 if bleu>=0.5]
 	ratio_70 = [bleu for bleu in ratio_50 if bleu>=0.7]
 	print(describe(np.array(bleu_list)))
 	total = float(len(bleu_list))
-	print('10+: {:.2f}, 30+: {:.2f}, 50+: {:.2f}, 70+: {:.2f}'.format(
-		len(ratio_10)*100/total, len(ratio_30)*100/total, 
+	print('10+: {:.2f}, 30+: {:.2f}, 40+: {:.2f}, 50+: {:.2f}, 70+: {:.2f}'.format(
+		len(ratio_10)*100/total, len(ratio_30)*100/total, len(ratio_40)*100/total, 
 		len(ratio_50)*100/total, len(ratio_70)*100/total))
 
 
