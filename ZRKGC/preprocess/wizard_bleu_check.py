@@ -5,32 +5,39 @@ from wizard_generator import data_generator
 from tokenization import BertTokenizer
 tokenizer = BertTokenizer.from_pretrained("unilm_v2_bert_pretrain", do_lower_case=True)
 
-from cmu_dog_bleu_check import (move_stop_words, normalize_answer, bleu_metric, bleu_stats)
+import re
+from metrics import bleu_metric
+from nltk.corpus import stopwords
+stop_words = set(stopwords.words('english'))
+
+import numpy as np
+from scipy.stats import describe
+
+def move_stop_words(str):
+	item = " ".join([w for w in str.split() if not w.lower() in stop_words])
+	return item
+
+re_art = re.compile(r'\b(a|an|the)\b')
+re_punc = re.compile(r'[!"#$%&()*+,-./:;<=>?@\[\]\\^`{|}~_\']')
+
+def normalize_answer(s):
+	"""Lower text and remove punctuation, articles and extra whitespace."""
+
+	def remove_articles(text):
+		return re_art.sub(' ', text)
+
+	def white_space_fix(text):
+		return ' '.join(text.split())
+
+	def remove_punc(text):
+		return re_punc.sub(' ', text)  # convert punctuation to spaces
+
+	def lower(text):
+		return text.lower()
+
+	return white_space_fix(remove_articles(remove_punc(lower(s))))
 
 data_path = sys.argv[1]
-
-text_truncate=128
-max_knowledge=10000
-knowledge_truncate=32
-label_truncate=32
-max_query_turn=4
-
-def truncate(str, num):
-	str = str.strip()
-	length = len(str.split())
-	list = str.split()[max(0, length - num):]
-	return " ".join(list)
-
-def detokenize(tk_str):
-	tk_list = tk_str.strip().split()
-	r_list = []
-	for tk in tk_list:
-		if tk.startswith('##') and len(r_list) > 0:
-			r_list[-1] = r_list[-1] + tk[2:]
-		else:
-			r_list.append(tk)
-	return " ".join(r_list)
-
 
 if "random" in data_path:
 	data_type="wizard_random"
@@ -57,6 +64,18 @@ def calc_bleu(data_file):
 		bleu_list.append(b2)
 	
 	return bleu_list
+
+
+def bleu_stats(bleu_list):
+	ratio_10 = [bleu for bleu in bleu_list if bleu>=0.1]
+	ratio_30 = [bleu for bleu in ratio_10 if bleu>=0.3]
+	ratio_50 = [bleu for bleu in ratio_30 if bleu>=0.5]
+	ratio_70 = [bleu for bleu in ratio_50 if bleu>=0.7]
+	print(describe(np.array(bleu_list)))
+	total = float(len(bleu_list))
+	print('10+: {:.2f}, 30+: {:.2f}, 50+: {:.2f}, 70+: {:.2f}'.format(
+		len(ratio_10)*100/total, len(ratio_30)*100/total, 
+		len(ratio_50)*100/total, len(ratio_70)*100/total))
 
 
 if __name__ == "__main__":
