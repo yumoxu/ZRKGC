@@ -106,8 +106,8 @@ def calc_bleu():
 
 def bleu_stats():
 	bleu_list = calc_bleu()
-	describe(np.array(bleu_list))
-
+	print(describe(np.array(bleu_list)))
+	
 
 if __name__ == "__main__":
 	bleu_stats()
